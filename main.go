@@ -1,36 +1,50 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
-	"web/usfl-backend/handlers"
 	"web/usfl-backend/mongohandler"
 
 	"github.com/labstack/echo"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var MongoClient *mongo.Client
+var mgodb mongohandler.Mgo
 
 func main() {
-	err := mongohandler.InitialDatabase(MongoClient)
-	defer mongohandler.Close(MongoClient)
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	mgodb.InitialDatabase()
+	defer mgodb.Close()
 
 	e := echo.New()
 	s := &http.Server{
-		Addr:         ":2000",
+		Addr:         "localhost:2000",
 		ReadTimeout:  20 * time.Minute,
 		WriteTimeout: 20 * time.Minute,
 	}
 
-	e.GET("/api/allbook", handlers.GetAllBook)
+	// ---- BOOK ----
+	e.POST("/api/book/insertABook", mongohandler.InsertABook)
+	e.POST("/api/book/insertManyBooks", mongohandler.InsertManyBooks)
+	e.POST("/api/book/insertBooksInCategory", mongohandler.InsertBooksInCategory)
 
+	e.GET("/api/book/all", mongohandler.GetAllBook)
+	e.GET("/api/book/detail", mongohandler.GetDetailABook)
+
+	// ---- USER ----
+	e.POST("/api/user/signup", mongohandler.UserSignUp)
+	e.GET("/api/user/signin", mongohandler.UserSignIn)
+
+	e.POST("/api/user/updatePassword", mongohandler.UpdatePassword)
+
+	e.POST("/api/user/borrowBook", mongohandler.BorrowBook)
+	e.POST("/api/user/updateBorrowBook", mongohandler.UpdateBorrowBook)
+
+	e.POST("/api/comment/addComment", mongohandler.AddComment)
+	e.GET("/api/comment/getComments", mongohandler.GetComments)
+
+	// ---- CATEGORY ----
+	e.POST("/api/category/createACategory", mongohandler.CreateACategory)
+	e.GET("/api/category/getAllCategory", mongohandler.GetAllCategory)
 
 	e.Logger.Fatal(e.StartServer(s))
 }
