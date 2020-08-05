@@ -23,6 +23,7 @@ func (c *Mgo) InitialDatabase() {
 		fmt.Println("MONGO ERROR: ", err)
 	}
 	db = _db
+
 }
 
 // Close - Close connection to mongoDB
@@ -102,6 +103,16 @@ func (c *Mgo) SaveMongo(MongoHost, DBName, collection string, ID string, data ma
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	index := mgo.Index{
+		Key: []string{"$text:title",},
+		Weights: map[string]int{
+			"title": 10,
+		},
+		Name: "textIndex",
+	}
+
+	db.DB(DBName).C("all@book").EnsureIndex(index)
 }
 
 //UpdateMongo - UpdateMongo
@@ -317,4 +328,21 @@ func (c *Mgo) FindAllRegexByID(MongoHost, DBName, collection, id string) []map[s
 		return nil
 	}
 	return result
+}
+
+// SearchInMongo - SearchInMongo
+func (c *Mgo) SearchInMongo(MongoHost, DBName, collection, key string) ([]map[string]interface{}, error) {
+	var result []map[string]interface{}
+
+	query := bson.M{
+		"$text": bson.M{
+			"$search": key,
+		},
+	}
+	err := db.DB(DBName).C(collection).Find(query).All(&result)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, nil
 }

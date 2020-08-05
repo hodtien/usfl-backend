@@ -30,6 +30,8 @@ func main() {
 	e.GET("/api/book/all", mongohandler.GetAllBook)
 	e.GET("/api/book/detail", mongohandler.GetDetailABook)
 
+	e.GET("/api/book/search", mongohandler.SearchBook)
+
 	// ---- USER ----
 	e.POST("/api/user/signup", mongohandler.UserSignUp)
 	e.GET("/api/user/signin", mongohandler.UserSignIn)

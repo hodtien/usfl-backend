@@ -6,7 +6,7 @@ import (
 	"web/usfl-backend/models"
 
 	"github.com/labstack/echo"
-	"github.com/lithammer/shortuuid"
+	// "github.com/lithammer/shortuuid"
 )
 
 // GetAllBook - get all book
@@ -27,7 +27,6 @@ func InsertABook(c echo.Context) error {
 		fmt.Println(err)
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
-	book.ID = shortuuid.New()
 
 	var bodyBytes []byte
 
@@ -47,7 +46,7 @@ func InsertABook(c echo.Context) error {
 
 	collection := "all@book"
 
-	Mgodb.SaveMongo(MongoHost, DBName, collection, book.ID, bookMap)
+	Mgodb.SaveMongo(MongoHost, DBName, collection, book.Sku, bookMap)
 
 	fmt.Println("Inserted a single book: ", book)
 
@@ -67,7 +66,6 @@ func InsertManyBooks(c echo.Context) error {
 	}
 
 	for _, book := range books.ManyBooks {
-		book.ID = shortuuid.New()
 
 		var bodyBytes []byte
 
@@ -87,7 +85,7 @@ func InsertManyBooks(c echo.Context) error {
 
 		collection := "all@book"
 
-		Mgodb.SaveMongo(MongoHost, DBName, collection, book.ID, bookMap)
+		Mgodb.SaveMongo(MongoHost, DBName, collection, book.Sku, bookMap)
 	}
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "INSERT SUCCEEDED"})
@@ -106,4 +104,18 @@ func GetDetailABook(c echo.Context) error {
 
 	fmt.Println("Get detail a book", book)
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": book})
+}
+
+// SearchBook - SearchBook
+func SearchBook(c echo.Context) error {
+	key := c.QueryParam("key")
+
+	collection := "all@book"
+
+	data, err := Mgodb.SearchInMongo(MongoHost, DBName, collection, key)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": data})
 }

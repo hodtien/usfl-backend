@@ -2,7 +2,6 @@ package models
 
 // Book struct - Create Book struct
 type Book struct {
-	ID        string   `json:"id"`
 	Title     string   `json:"title"`     // Tên sách
 	Sku       string   `json:"sku"`       // Mã SKU
 	Views     string   `json:"views"`     // Lượt xem

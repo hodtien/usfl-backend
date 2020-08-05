@@ -75,9 +75,10 @@ func InsertBooksInCategory(c echo.Context) error {
 	}
 
 	for _, v := range books.BooksID {
-		book, err := Mgodb.FindByID(MongoHost, DBName, "all@boook", v)
+		book, err := Mgodb.FindByID(MongoHost, DBName, "all@book", v)
 		if err != nil {
-			fmt.Println("ERROR in INSERT MANY BOOKS:", err)
+			fmt.Println("ERROR in INSERT a book in category:", err)
+			continue
 		}
 		Mgodb.SaveMongo(MongoHost, DBName, collection, v, book)
 	}
