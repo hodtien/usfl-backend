@@ -45,12 +45,7 @@ type Comment struct {
 	Images    []string `json:"images"`
 }
 
-// Category - Category
-type Category struct {
-	ID   string `json:"categoryID"`
-	Name string `json:"name"`
-}
-
+// BorrowBook - BorrowBook
 type BorrowBook struct {
 	Username string `json:"username"`
 	BorrowID string `json:"borrowID"`

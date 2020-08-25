@@ -79,7 +79,7 @@ func UserSignIn(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Incorrect Username or Password"})
 	}
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true"})
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": ret})
 }
 
 // UpdatePassword -v

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -105,7 +106,7 @@ func (c *Mgo) SaveMongo(MongoHost, DBName, collection string, ID string, data ma
 	}
 
 	index := mgo.Index{
-		Key: []string{"$text:title",},
+		Key: []string{"$text:title"},
 		Weights: map[string]int{
 			"title": 10,
 		},
@@ -293,32 +294,6 @@ func (c *Mgo) LimitSortInMongo(collection, sortByField string, limit int) ([]map
 	return result, nil
 }
 
-//PaginateWithSkip - Phân trang dữ liệu.
-// VD: Page 1, Limit 2 => Page 1: record 1, record 2; Page 2: record 3, record 4
-//	   Page 2, Limit 3 => Page 1: record 1, record 2, record 3; Page 2: record 4, record 5, record 6
-func (c *Mgo) PaginateWithSkip(collection string, page, limit int) ([]interface{}, error) {
-	if limit <= 0 {
-		return nil, fmt.Errorf("Limit must > 0")
-	}
-
-	start := time.Now()
-	skip := (page - 1) * limit
-
-	records := make([]interface{}, Limit)
-	err := db.DB(DBName).C(collection).Find(nil).Sort("_id").Skip(skip).Limit(limit).All(&records)
-	if err != nil || len(records) == 0 {
-		fmt.Println(err)
-		return nil, err
-	}
-	rFirstMap := records[0].(bson.M)
-	rLastMap := records[len(records)-1].(bson.M)
-	rFirst := fmt.Sprintf("%s", rFirstMap["_id"])
-	rLast := fmt.Sprintf("%s", rLastMap["_id"])
-
-	fmt.Printf("paginateWithSkip -> page %d with record from %s to %s in %s\n", page, rFirst, rLast, time.Since(start))
-	return records, nil
-}
-
 //FindAllRegexByID - Find All Data from Mongo DB by ID and Regex
 func (c *Mgo) FindAllRegexByID(MongoHost, DBName, collection, id string) []map[string]interface{} {
 	var result []map[string]interface{}
@@ -331,18 +306,29 @@ func (c *Mgo) FindAllRegexByID(MongoHost, DBName, collection, id string) []map[s
 }
 
 // SearchInMongo - SearchInMongo
-func (c *Mgo) SearchInMongo(MongoHost, DBName, collection, key string) ([]map[string]interface{}, error) {
-	var result []map[string]interface{}
+func (c *Mgo) SearchInMongo(MongoHost, DBName, collection, key, field string) ([]map[string]interface{}, error) {
+	var allReturn []map[string]interface{}
 
-	query := bson.M{
-		"$text": bson.M{
-			"$search": key,
-		},
-	}
-	err := db.DB(DBName).C(collection).Find(query).All(&result)
+	err := db.DB(DBName).C(collection).Find(bson.M{}).All(&allReturn)
+
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
+
+	var result []map[string]interface{}
+
+	for _, items := range allReturn {
+		object := items[field]
+		objectBytes, err := json.Marshal(object)
+		if err != nil {
+			fmt.Println(err)
+		}
+		tmp := strings.ToLowerSpecial(unicode.TurkishCase, string(objectBytes))
+		if strings.Contains(tmp, key) {
+			result = append(result, items)
+		}
+	}
+
 	return result, nil
 }

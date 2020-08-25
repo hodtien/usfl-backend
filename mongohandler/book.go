@@ -3,6 +3,10 @@ package mongohandler
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
+	// "strings"
+	// "unicode"
 	"web/usfl-backend/models"
 
 	"github.com/labstack/echo"
@@ -15,7 +19,9 @@ func GetAllBook(c echo.Context) error {
 
 	allbook := Mgodb.FindAll(MongoHost, DBName, collection)
 
-	return c.JSON(200, allbook)
+	ret := deleteSomeFieldInAllBooks(allbook)
+
+	return c.JSON(200, ret)
 }
 
 // InsertABook - insert a book to db
@@ -108,14 +114,115 @@ func GetDetailABook(c echo.Context) error {
 
 // SearchBook - SearchBook
 func SearchBook(c echo.Context) error {
-	key := c.QueryParam("key")
+	search := new(struct {
+		Key string `json:"key" validate:"required"`
+	})
+
+	err := c.Bind(&search)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
 
 	collection := "all@book"
 
-	data, err := Mgodb.SearchInMongo(MongoHost, DBName, collection, key)
+	// key := strings.ToLowerSpecial(unicode.TurkishCase, search.Key)
+	key := search.Key
+
+	data, err := Mgodb.SearchInMongo(MongoHost, DBName, collection, key, "title")
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": data})
+}
+
+// deleteSomeFieldInAllBooks - deleteSomeFieldInAllBooks
+func deleteSomeFieldInAllBooks(allbook []map[string]interface{}) []map[string]interface{} {
+	var ret []map[string]interface{}
+
+	for _, val := range allbook {
+		delete(val, "views")
+		delete(val, "author")
+		delete(val, "publisher")
+		delete(val, "page")
+		delete(val, "type")
+		delete(val, "language")
+		delete(val, "tag")
+		delete(val, "remain")
+		delete(val, "rate")
+		delete(val, "numRate")
+		delete(val, "intro")
+
+		ret = append(ret, val)
+	}
+
+	return ret
+}
+
+// GetAllNewBook - GetAllNewBook
+func GetAllNewBook(c echo.Context) error {
+	collection := "all@book"
+
+	allbook := Mgodb.FindAll(MongoHost, DBName, collection)
+
+	for i := 0; i < len(allbook)-1; i++ {
+		for j := i + 1; j < len(allbook); j++ {
+			ti := allbook[i]
+			tj := allbook[j]
+
+			vi, err := strconv.Atoi(ti["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			vj, err := strconv.Atoi(tj["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			if vi > vj {
+				tmp := allbook[i]
+				allbook[i] = allbook[j]
+				allbook[j] = tmp
+			}
+		}
+	}
+
+	data := deleteSomeFieldInAllBooks(allbook)
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "data": data, "total": len(data)})
+}
+
+// GetAllPopularBook - GetAllPopularBook
+func GetAllPopularBook(c echo.Context) error {
+	collection := "all@book"
+
+	allbook := Mgodb.FindAll(MongoHost, DBName, collection)
+
+	for i := 0; i < len(allbook)-1; i++ {
+		for j := i + 1; j < len(allbook); j++ {
+			ti := allbook[i]
+			tj := allbook[j]
+
+			vi, err := strconv.Atoi(ti["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			vj, err := strconv.Atoi(tj["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			if vi < vj {
+				tmp := allbook[i]
+				allbook[i] = allbook[j]
+				allbook[j] = tmp
+			}
+		}
+	}
+
+	data := deleteSomeFieldInAllBooks(allbook)
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "data": data, "total": len(data)})
 }

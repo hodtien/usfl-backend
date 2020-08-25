@@ -1,9 +1,7 @@
 package mongohandler
 
 import (
-	"encoding/json"
 	"fmt"
-	"web/usfl-backend/models"
 
 	"github.com/labstack/echo"
 )
@@ -17,40 +15,34 @@ func GetAllCategory(c echo.Context) error {
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": allCategory})
 }
 
+// GetACategory - GetACategory
+func GetACategory(c echo.Context) error {
+	category := c.QueryParam("category")
+
+	collection := "Category@" + category
+
+	bookInCategory := Mgodb.FindAll(MongoHost, DBName, collection)
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": bookInCategory})
+}
+
 // CreateACategory - CreateACategory
 func CreateACategory(c echo.Context) error {
-	var newCategory models.Category
-	err := c.Bind(&newCategory)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
-	}
+	categoryName := c.QueryParam("name")
 
-	newCategory.ID = "Category@" + newCategory.Name
-
-	var bodyBytes []byte
-
-	bodyBytes, err = json.Marshal(newCategory)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
-	}
+	CategoryID := "Category@" + categoryName
 
 	category := make(map[string]interface{})
 
-	err = json.Unmarshal(bodyBytes, &category)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
-	}
+	category["name"] = categoryName
 
 	collection := "all@category"
 
-	Mgodb.SaveMongo(MongoHost, DBName, collection, newCategory.ID, category)
+	Mgodb.SaveMongo(MongoHost, DBName, collection, CategoryID, category)
 
-	fmt.Println("Create a category: ", category)
+	fmt.Println("Create a category successfully: ", categoryName)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": category})
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Create a category successfully!"})
 }
 
 // InsertBooksInCategory - InsertBooksInCategory

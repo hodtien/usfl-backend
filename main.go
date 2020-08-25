@@ -27,6 +27,8 @@ func main() {
 	e.POST("/api/book/insertManyBooks", mongohandler.InsertManyBooks)
 	e.POST("/api/book/insertBooksInCategory", mongohandler.InsertBooksInCategory)
 
+	e.GET("/api/book/allNew", mongohandler.GetAllNewBook)
+	e.GET("/api/book/allPopular", mongohandler.GetAllPopularBook)
 	e.GET("/api/book/all", mongohandler.GetAllBook)
 	e.GET("/api/book/detail", mongohandler.GetDetailABook)
 
@@ -46,7 +48,10 @@ func main() {
 
 	// ---- CATEGORY ----
 	e.POST("/api/category/createACategory", mongohandler.CreateACategory)
+	e.GET("/api/category/getACategory", mongohandler.GetACategory)
 	e.GET("/api/category/getAllCategory", mongohandler.GetAllCategory)
+
+
 
 	e.Logger.Fatal(e.StartServer(s))
 }
