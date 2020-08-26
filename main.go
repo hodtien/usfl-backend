@@ -37,6 +37,7 @@ func main() {
 	// ---- USER ----
 	e.POST("/api/user/signup", mongohandler.UserSignUp)
 	e.GET("/api/user/signin", mongohandler.UserSignIn)
+	e.GET("/api/user/info", mongohandler.UserInfo)
 
 	e.POST("/api/user/updatePassword", mongohandler.UpdatePassword)
 

@@ -82,6 +82,24 @@ func UserSignIn(c echo.Context) error {
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": ret})
 }
 
+// UserInfo - user info
+func UserInfo(c echo.Context) error {
+	username := c.QueryParam("username")
+
+	collection := "users"
+
+	ret, err := Mgodb.FindByID(MongoHost, DBName, collection, username)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	if ret == nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "false"})
+	}
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": ret})
+}
+
 // UpdatePassword -v
 func UpdatePassword(c echo.Context) error {
 	user := new(struct {
