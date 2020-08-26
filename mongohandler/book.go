@@ -190,7 +190,7 @@ func GetAllNewBook(c echo.Context) error {
 
 	data := deleteSomeFieldInAllBooks(allbook)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "data": data, "total": len(data)})
+	return c.JSON(200, data)
 }
 
 // GetAllPopularBook - GetAllPopularBook
@@ -224,5 +224,5 @@ func GetAllPopularBook(c echo.Context) error {
 
 	data := deleteSomeFieldInAllBooks(allbook)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "data": data, "total": len(data)})
+	return c.JSON(200, data)
 }
