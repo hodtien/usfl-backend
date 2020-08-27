@@ -52,38 +52,29 @@ func UserSignUp(c echo.Context) error {
 
 // UserSignIn - user log in
 func UserSignIn(c echo.Context) error {
-	user := new(struct {
-		Username string `json:"username" validate:"required"`
-		Password string `json:"password" validate:"required"`
-	})
-
-	err := c.Bind(&user)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
-	}
-
-	username := user.Username
-	password := user.Password
+	username := c.QueryParam("username")
+	password := c.QueryParam("password")
 
 	password = fmt.Sprintf("%v", sha256.Sum256([]byte(password)))
 
 	collection := "users"
 
-	ret, err := Mgodb.FindByID(MongoHost, DBName, collection, username)
-	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	ret, ok := Mgodb.FindOneMongoByField(MongoHost, DBName, collection, "username", username)
+	if !ok {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": false})
 	}
 
 	if ret == nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Incorrect Username or Password"})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Incorrect Username or Password1"})
 	}
 
 	if password != ret["password"] {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Incorrect Username or Password"})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Incorrect Username or Password2"})
 	}
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": ret})
+
+
+	return c.JSON(200, ret["_id"])
 }
 
 // UserInfo - user info

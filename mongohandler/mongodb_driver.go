@@ -89,8 +89,7 @@ func (c *Mgo) FindAllID(MongoHost, DBName, collection string) []map[string]inter
 //FindOneMongoByField - Find one document in Mongo DB by any Field
 func (c *Mgo) FindOneMongoByField(MongoHost, DBName, collection, f, v string) (map[string]interface{}, bool) {
 	var result map[string]interface{}
-	selector := bson.M{f: bson.M{"$regex": v}}
-	err := db.DB(DBName).C(collection).Find(selector).One(result)
+	err := db.DB(DBName).C(collection).Find(bson.M{f: v}).One(&result)
 
 	if err == mgo.ErrNotFound {
 		return nil, false
