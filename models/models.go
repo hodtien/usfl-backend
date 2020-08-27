@@ -47,7 +47,7 @@ type Comment struct {
 
 // BorrowBook - BorrowBook
 type BorrowBook struct {
-	Username string `json:"username"`
+	UserID string `json:"userid"`
 	BorrowID string `json:"borrowID"`
 	BookID   string `json:"bookID"`
 	Status   string `json:"status"`

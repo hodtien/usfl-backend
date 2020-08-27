@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 	"web/usfl-backend/models"
-	"github.com/rs/xid"
+
+	"github.com/google/uuid"
 	"github.com/labstack/echo"
+	"github.com/rs/xid"
 )
 
 // UserSignUp - create user
@@ -41,7 +43,9 @@ func UserSignUp(c echo.Context) error {
 
 	collection := "users"
 
-	Mgodb.SaveMongo(MongoHost, DBName, collection, user.Username, userMap)
+	uid := uuid.New().String()
+
+	Mgodb.SaveMongo(MongoHost, DBName, collection, uid, userMap)
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": userMap})
 }
@@ -84,11 +88,11 @@ func UserSignIn(c echo.Context) error {
 
 // UserInfo - user info
 func UserInfo(c echo.Context) error {
-	username := c.QueryParam("username")
+	userID := c.QueryParam("userid")
 
 	collection := "users"
 
-	ret, err := Mgodb.FindByID(MongoHost, DBName, collection, username)
+	ret, err := Mgodb.FindByID(MongoHost, DBName, collection, userID)
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
@@ -162,9 +166,12 @@ func BorrowBook(c echo.Context) error {
 	}
 	borrowBook.BorrowID = xid.New().String()
 
-	user, err := Mgodb.FindByID(MongoHost, DBName, "users", borrowBook.Username)
+	user, err := Mgodb.FindByID(MongoHost, DBName, "users", borrowBook.UserID)
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+	if user == nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "User not exist"})
 	}
 
 	book, err := Mgodb.FindByID(MongoHost, DBName, "all@book", borrowBook.BookID)
@@ -180,15 +187,10 @@ func BorrowBook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
 	}
 
-	dataBytes, err := json.Marshal(user)
-	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
-	}
-
 	borrowBook.Time = time.Now().Format("2006-01-02 15:04")
 	borrowBook.Status = "Place Hold"
 
-	dataBytes, err = json.Marshal(borrowBook)
+	dataBytes, err := json.Marshal(borrowBook)
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
@@ -198,10 +200,27 @@ func BorrowBook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
 
-	Mgodb.SaveMongo(MongoHost, DBName, borrowBook.Username + "@Borrow", borrowBook.BorrowID, borrowBookMap)
+	Mgodb.SaveMongo(MongoHost, DBName, borrowBook.UserID + "@Borrow", borrowBook.BorrowID, borrowBookMap)
 	Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount - 1))
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status})
+}
+
+// YourBook - YourBook
+func YourBook(c echo.Context) error {
+	userID := c.QueryParam("userid")
+
+	user, err := Mgodb.FindByID(MongoHost, DBName, "users", userID)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	username := user["username"].(string)
+
+	data := Mgodb.FindAll(MongoHost, DBName, username + "@Borrow")
+
+
+	return c.JSON(200, data)
 }
 
 // UpdateBorrowBook - UpdateBorrowBook

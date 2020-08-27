@@ -43,6 +43,8 @@ func main() {
 
 	e.POST("/api/user/borrowBook", mongohandler.BorrowBook)
 	e.POST("/api/user/updateBorrowBook", mongohandler.UpdateBorrowBook)
+	e.GET("/api/user/yourBook", mongohandler.YourBook)
+
 
 	e.POST("/api/comment/addComment", mongohandler.AddComment)
 	e.GET("/api/comment/getComments", mongohandler.GetComments)
