@@ -21,6 +21,11 @@ func UserSignUp(c echo.Context) error {
 		fmt.Println(err)
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
+	collection := "users"
+
+	if _, ok := Mgodb.FindOneMongoByField(MongoHost, DBName, collection, "username", user.Username); ok == true {
+		return c.JSON(400, "Username is exists")
+	}
 
 	user.Password = fmt.Sprintf("%v", sha256.Sum256([]byte(user.Password)))
 
@@ -40,8 +45,6 @@ func UserSignUp(c echo.Context) error {
 		fmt.Println(err)
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
-
-	collection := "users"
 
 	uid := uuid.New().String()
 
