@@ -47,7 +47,7 @@ func UserSignUp(c echo.Context) error {
 
 	Mgodb.SaveMongo(MongoHost, DBName, collection, uid, userMap)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": userMap})
+	return c.JSON(200, uid)
 }
 
 // UserSignIn - user log in
