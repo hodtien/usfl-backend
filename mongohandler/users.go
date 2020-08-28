@@ -1,7 +1,7 @@
 package mongohandler
 
 import (
-	"crypto/sha256"
+	// "crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -27,7 +27,7 @@ func UserSignUp(c echo.Context) error {
 		return c.JSON(400, "Username is exists")
 	}
 
-	user.Password = fmt.Sprintf("%v", sha256.Sum256([]byte(user.Password)))
+	// user.Password = fmt.Sprintf("%v", sha256.Sum256([]byte(user.Password)))
 
 	var bodyBytes []byte
 
@@ -58,7 +58,7 @@ func UserSignIn(c echo.Context) error {
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")
 
-	password = fmt.Sprintf("%v", sha256.Sum256([]byte(password)))
+	// password = fmt.Sprintf("%v", sha256.Sum256([]byte(password)))
 
 	collection := "users"
 
@@ -116,8 +116,8 @@ func UpdatePassword(c echo.Context) error {
 	oldPassword := user.OldPassword
 	newPassword := user.NewPassword
 
-	oldPassword = fmt.Sprintf("%v", sha256.Sum256([]byte(oldPassword)))
-	newPassword = fmt.Sprintf("%v", sha256.Sum256([]byte(newPassword)))
+	// oldPassword = fmt.Sprintf("%v", sha256.Sum256([]byte(oldPassword)))
+	// newPassword = fmt.Sprintf("%v", sha256.Sum256([]byte(newPassword)))
 
 	collection := "users"
 

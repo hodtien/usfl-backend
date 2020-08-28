@@ -2,7 +2,8 @@ package models
 
 // Book struct - Create Book struct
 type Book struct {
-	Title     string   `json:"title"`     // Tên sách
+	Title     string   `json:"title"` // Tên sách
+	EnTitle   string   `json:"en_title"`
 	Sku       string   `json:"sku"`       // Mã SKU
 	Views     string   `json:"views"`     // Lượt xem
 	Author    string   `json:"author"`    // Tên tác giả
@@ -47,9 +48,9 @@ type Comment struct {
 
 // BorrowBook - BorrowBook
 type BorrowBook struct {
-	UserID string `json:"userid"`
+	UserID   string `json:"userid"`
 	BorrowID string `json:"borrowID"`
 	BookID   string `json:"bookID"`
 	Status   string `json:"status"`
-	Time      string   `json:"time"`
+	Time     string `json:"time"`
 }

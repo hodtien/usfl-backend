@@ -318,13 +318,14 @@ func (c *Mgo) SearchInMongo(MongoHost, DBName, collection, key, field string) ([
 	var result []map[string]interface{}
 
 	for _, items := range allReturn {
-		object := items[field]
-		objectBytes, err := json.Marshal(object)
-		if err != nil {
-			fmt.Println(err)
-		}
-		tmp := strings.ToLowerSpecial(unicode.TurkishCase, string(objectBytes))
-		if strings.Contains(tmp, key) {
+		object1 := items[field].(string)
+		object2 := items["title"].(string)
+		tmp1 := strings.ToLower(object1)
+
+		key2 := strings.ToLowerSpecial(unicode.TurkishCase, key)
+		tmp2 := strings.ToLowerSpecial(unicode.TurkishCase, object2)
+
+		if strings.Contains(tmp1, key) || strings.Contains(tmp2, key2) {
 			result = append(result, items)
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	// "strings"
 	// "unicode"
@@ -21,7 +22,47 @@ func GetAllBook(c echo.Context) error {
 
 	ret := deleteSomeFieldInAllBooks(allbook)
 
+	for key, book := range ret {
+		book, err := convertImage(book)
+		if err != nil {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		}
+		ret[key] = book
+	}
+
 	return c.JSON(200, ret)
+}
+
+func convertImage(book map[string]interface{}) (map[string]interface{}, error) {
+	bookBytes, err := json.Marshal(book)
+	if err != nil {
+		return nil, err
+	}
+
+	bookStruct := new(models.Book)
+	err = json.Unmarshal(bookBytes, &bookStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	for key, val := range bookStruct.Images {
+		println(val)
+		val = strings.ReplaceAll(val, "/src/asserts/img/book-", "")
+		val = strings.ReplaceAll(val, ".jpg", "")
+		bookStruct.Images[key] = val
+	}
+
+	bookBytes, err = json.Marshal(bookStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(bookBytes, &book)
+	if err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }
 
 // InsertABook - insert a book to db
@@ -108,6 +149,11 @@ func GetDetailABook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
 
+	book, err = convertImage(book)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
 	fmt.Println("Get detail a book", book)
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": book})
 }
@@ -125,12 +171,20 @@ func SearchBook(c echo.Context) error {
 
 	collection := "all@book"
 
-	// key := strings.ToLowerSpecial(unicode.TurkishCase, search.Key)
-	key := search.Key
+	key := strings.ToLower(search.Key)
+	key = strings.ReplaceAll(key, "  ", " ")
 
-	data, err := Mgodb.SearchInMongo(MongoHost, DBName, collection, key, "title")
+	data, err := Mgodb.SearchInMongo(MongoHost, DBName, collection, key, "en_title")
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	for key, book := range data {
+		book, err = convertImage(book)
+		if err != nil {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		}
+		data[key] = book
 	}
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": data})
@@ -190,6 +244,14 @@ func GetAllNewBook(c echo.Context) error {
 
 	data := deleteSomeFieldInAllBooks(allbook)
 
+	for key, book := range data {
+		book, err := convertImage(book)
+		if err != nil {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		}
+		data[key] = book
+	}
+
 	return c.JSON(200, data)
 }
 
@@ -223,6 +285,14 @@ func GetAllPopularBook(c echo.Context) error {
 	}
 
 	data := deleteSomeFieldInAllBooks(allbook)
+
+	for key, book := range data {
+		book, err := convertImage(book)
+		if err != nil {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		}
+		data[key] = book
+	}
 
 	return c.JSON(200, data)
 }

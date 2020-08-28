@@ -7,6 +7,7 @@ import (
 	"web/usfl-backend/mongohandler"
 
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 var mgodb mongohandler.Mgo
@@ -21,6 +22,8 @@ func main() {
 		ReadTimeout:  20 * time.Minute,
 		WriteTimeout: 20 * time.Minute,
 	}
+
+	e.Use(middleware.CORS())
 
 	// ---- BOOK ----
 	e.POST("/api/book/insertABook", mongohandler.InsertABook)
