@@ -226,7 +226,7 @@ func BorrowBook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
 	}
 
-	borrowBook.Status = "pending"
+	borrowBook.Status = "Pending"
 
 	dataBytes, err := json.Marshal(borrowBook)
 	if err != nil {
@@ -284,20 +284,18 @@ func UpdateBorrowBook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
 	}
 
-	bookCount, err := strconv.Atoi(fmt.Sprintf("%v", book["remain"]))
-	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
-	}
+	bookCount := book["remain"].(float64)
 
+	brStt := strings.ToLower(borrowData["status"].(string))
 
-	if stt == "borrowing" && borrowData["status"] == "pending" {
-		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount - 1))
+	if stt == "borrowing" && brStt == "pending" {
+		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", bookCount - 1)
 		if bookCount <= 0 {
 			return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
 		}
 	} else {
-		if stt == "returned" && borrowData["status"] == "borrowing" {
-			Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount + 1))
+		if stt == "returned" && brStt == "borrowing" {
+			Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", bookCount + 1)
 		} else {
 			return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Status Invalid"})
 		}

@@ -116,7 +116,7 @@ func (c *Mgo) SaveMongo(MongoHost, DBName, collection string, ID string, data ma
 }
 
 //UpdateMongo - UpdateMongo
-func (c *Mgo) UpdateMongo(MongoHost, DBName, collection, id string, field, value string) error {
+func (c *Mgo) UpdateMongo(MongoHost, DBName, collection, id, field string, value interface{}) error {
 	// value := make(map[string]interface{})
 	// err := json.Unmarshal(data, &value)
 	// if err != nil {
