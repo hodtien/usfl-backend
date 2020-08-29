@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 	"web/usfl-backend/models"
 
@@ -226,7 +227,7 @@ func BorrowBook(c echo.Context) error {
 	}
 
 	borrowBook.Time = time.Now().Format("2006-01-02 15:04")
-	borrowBook.Status = "Place Hold"
+	borrowBook.Status = "Pending"
 
 	dataBytes, err := json.Marshal(borrowBook)
 	if err != nil {
@@ -239,7 +240,6 @@ func BorrowBook(c echo.Context) error {
 	}
 
 	Mgodb.SaveMongo(MongoHost, DBName, borrowBook.UserID + "@Borrow", borrowBook.BorrowID, borrowBookMap)
-	Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount - 1))
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status})
 }
@@ -263,18 +263,27 @@ func YourBook(c echo.Context) error {
 
 // UpdateBorrowBook - UpdateBorrowBook
 func UpdateBorrowBook(c echo.Context) error {
-	username := c.QueryParam("username")
+	userID := c.QueryParam("userid")
 	borrowID := c.QueryParam("borrowID")
 	status := c.QueryParam("status")
 
-	borrowData, err := Mgodb.FindByID(MongoHost, DBName, username + "@Borrow", borrowID)
+	borrowData, err := Mgodb.FindByID(MongoHost, DBName, userID + "@Borrow", borrowID)
 	if err != nil {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
 	}
 
 	borrowData["status"] = status
+	stt := strings.ToLower(status)
+	if stt == "borrowing" {
+		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount - 1))
+	}
+	if stt == "returned" {
+		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount + 1))
+	} else {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Status Invalid"})
+	}
 
-	Mgodb.SaveMongo(MongoHost, DBName, username + "@Borrow", borrowID, borrowData)
+	Mgodb.SaveMongo(MongoHost, DBName, userID + "@Borrow", borrowID, borrowData)
 
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status Updated: " + status})
 }
