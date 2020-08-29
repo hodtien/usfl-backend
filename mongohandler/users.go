@@ -98,6 +98,50 @@ func UserInfo(c echo.Context) error {
 	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": ret})
 }
 
+// UpdateUser - UpdateUser
+func UpdateUser(c echo.Context) error {
+	userID := c.QueryParam("userid")
+
+	var user models.User
+	err := c.Bind(&user)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	collection := "users"
+
+	ret, err := Mgodb.FindByID(MongoHost, DBName, collection, userID)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	if ret == nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "false"})
+	}
+
+	var bodyBytes []byte
+
+	bodyBytes, err = json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+
+	}
+
+	userMap := make(map[string]interface{})
+
+	err = json.Unmarshal(bodyBytes, &userMap)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	Mgodb.SaveMongo(MongoHost, DBName, collection, userID, userMap)
+
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "true", "data": userMap})
+}
+
 // UpdatePassword -v
 func UpdatePassword(c echo.Context) error {
 	user := new(struct {
