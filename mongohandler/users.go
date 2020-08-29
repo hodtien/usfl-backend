@@ -240,7 +240,7 @@ func BorrowBook(c echo.Context) error {
 
 	Mgodb.SaveMongo(MongoHost, DBName, borrowBook.UserID + "@Borrow", borrowBook.BorrowID, borrowBookMap)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status, "borrowID": borrowBook.BorrowID})
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status, "borrowID": borrowBook.BorrowID, "data": borrowBookMap})
 }
 
 // YourBook - YourBook
@@ -267,7 +267,8 @@ func UpdateBorrowBook(c echo.Context) error {
 	userID := c.QueryParam("userid")
 	borrowID := c.QueryParam("borrowID")
 	status := c.QueryParam("status")
-	time := c.QueryParam("time")
+	timeBorrow := c.QueryParam("time_borrow")
+	timeReturn := c.QueryParam("time_return")
 
 	borrowData, err := Mgodb.FindByID(MongoHost, DBName, userID + "@Borrow", borrowID)
 	if err != nil {
@@ -301,14 +302,18 @@ func UpdateBorrowBook(c echo.Context) error {
 		}
 	} 
 
-	if time != "" {
-		borrowData["time"] = time
+	if timeBorrow != "" {
+		borrowData["time_borrow"] = timeBorrow
 	}
+	if timeReturn != "" {
+		borrowData["time_return"] = timeReturn
+	}
+
 	borrowData["status"] = status
 
 	Mgodb.SaveMongo(MongoHost, DBName, userID + "@Borrow", borrowID, borrowData)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status Updated: " + status})
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status Updated: " + status, "data": borrowData})
 }
 
 // AddComment - AddComment
