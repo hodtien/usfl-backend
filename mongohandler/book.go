@@ -46,7 +46,6 @@ func convertImage(book map[string]interface{}) (map[string]interface{}, error) {
 	}
 
 	for key, val := range bookStruct.Images {
-		println(val)
 		val = strings.ReplaceAll(val, "/src/asserts/img/book-", "")
 		val = strings.ReplaceAll(val, ".jpg", "")
 		bookStruct.Images[key] = val

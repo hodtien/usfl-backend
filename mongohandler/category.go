@@ -2,6 +2,7 @@ package mongohandler
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/labstack/echo"
 )
@@ -21,9 +22,42 @@ func GetACategory(c echo.Context) error {
 
 	collection := "Category@" + category
 
-	bookInCategory := Mgodb.FindAll(MongoHost, DBName, collection)
+	allbook := Mgodb.FindAll(MongoHost, DBName, collection)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": bookInCategory})
+	for i := 0; i < len(allbook)-1; i++ {
+		for j := i + 1; j < len(allbook); j++ {
+			ti := allbook[i]
+			tj := allbook[j]
+
+			vi, err := strconv.Atoi(ti["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			vj, err := strconv.Atoi(tj["views"].(string))
+			if err != nil {
+				return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+			}
+
+			if vi < vj {
+				tmp := allbook[i]
+				allbook[i] = allbook[j]
+				allbook[j] = tmp
+			}
+		}
+	}
+
+	data := deleteSomeFieldInAllBooks(allbook)
+
+	for key, book := range data {
+		book, err := convertImage(book)
+		if err != nil {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		}
+		data[key] = book
+	}
+
+	return c.JSON(200, data)
 }
 
 // CreateACategory - CreateACategory
