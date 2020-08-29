@@ -274,11 +274,28 @@ func UpdateBorrowBook(c echo.Context) error {
 
 	borrowData["status"] = status
 	stt := strings.ToLower(status)
+
+	bookID := borrowData["bookID"].(string)
+
+	book, err := Mgodb.FindByID(MongoHost, DBName, "all@book", bookID)
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+	bookCount, err := strconv.Atoi(fmt.Sprintf("%v", book["remain"]))
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+	}
+
+
 	if stt == "borrowing" {
-		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount - 1))
+		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount - 1))
+		if bookCount <= 0 {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
+		}
 	}
 	if stt == "returned" {
-		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowBook.BookID, "remain", strconv.Itoa(bookCount + 1))
+		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount + 1))
 	} else {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Status Invalid"})
 	}
