@@ -226,8 +226,7 @@ func BorrowBook(c echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
 	}
 
-	borrowBook.Time = time.Now().Format("2006-01-02 15:04")
-	borrowBook.Status = "Pending"
+	borrowBook.Status = "pending"
 
 	dataBytes, err := json.Marshal(borrowBook)
 	if err != nil {
@@ -241,7 +240,7 @@ func BorrowBook(c echo.Context) error {
 
 	Mgodb.SaveMongo(MongoHost, DBName, borrowBook.UserID + "@Borrow", borrowBook.BorrowID, borrowBookMap)
 
-	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status})
+	return c.JSON(200, map[string]interface{}{"code": "0", "message": "Borrow Book Status: " + borrowBook.Status, "borrowID": borrowBook.BorrowID})
 }
 
 // YourBook - YourBook
@@ -250,12 +249,14 @@ func YourBook(c echo.Context) error {
 
 	user, err := Mgodb.FindByID(MongoHost, DBName, "users", userID)
 	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
 	}
 
-	username := user["username"].(string)
+	if user == nil || user["_id"] == nil {
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
+	}
 
-	data := Mgodb.FindAll(MongoHost, DBName, username + "@Borrow")
+	data := Mgodb.FindAll(MongoHost, DBName, userID + "@Borrow")
 
 
 	return c.JSON(200, data)
@@ -266,39 +267,46 @@ func UpdateBorrowBook(c echo.Context) error {
 	userID := c.QueryParam("userid")
 	borrowID := c.QueryParam("borrowID")
 	status := c.QueryParam("status")
+	time := c.QueryParam("time")
 
 	borrowData, err := Mgodb.FindByID(MongoHost, DBName, userID + "@Borrow", borrowID)
 	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
 	}
 
-	borrowData["status"] = status
+	
 	stt := strings.ToLower(status)
 
 	bookID := borrowData["bookID"].(string)
 
 	book, err := Mgodb.FindByID(MongoHost, DBName, "all@book", bookID)
 	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
 	}
 
 	bookCount, err := strconv.Atoi(fmt.Sprintf("%v", book["remain"]))
 	if err != nil {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": err})
+		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Failed"})
 	}
 
 
-	if stt == "borrowing" {
+	if stt == "borrowing" && borrowData["status"] == "pending" {
 		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount - 1))
 		if bookCount <= 0 {
 			return c.JSON(400, map[string]interface{}{"code": "-1", "message": "OUT OF STOCK!"})
 		}
-	}
-	if stt == "returned" {
-		Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount + 1))
 	} else {
-		return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Status Invalid"})
+		if stt == "returned" && borrowData["status"] == "borrowing" {
+			Mgodb.UpdateMongo(MongoHost, DBName, "all@book", borrowData["bookID"].(string), "remain", strconv.Itoa(bookCount + 1))
+		} else {
+			return c.JSON(400, map[string]interface{}{"code": "-1", "message": "Status Invalid"})
+		}
+	} 
+
+	if time != "" {
+		borrowData["time"] = time
 	}
+	borrowData["status"] = status
 
 	Mgodb.SaveMongo(MongoHost, DBName, userID + "@Borrow", borrowID, borrowData)
 
